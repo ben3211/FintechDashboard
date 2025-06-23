@@ -1,0 +1,22 @@
+﻿@page "/stock"
+@inject HttpClient Http
+
+<h3>Stock Viewer</h3>
+
+<input @bind="Symbol" placeholder="Enter stock symbol..." />
+<button @onclick="FetchPrice">Get Price</button>
+
+@if (Loading)
+{
+    <p>Loading...</p>
+}
+else if (Price.HasValue)
+{
+    <p><strong>@Symbol</strong> current price: <span style="color:green">@Price $</span></p>
+}
+else if (HasError)
+{
+    <p style="color:red">Stock not found or error retrieving price.</p>
+}
+
+
