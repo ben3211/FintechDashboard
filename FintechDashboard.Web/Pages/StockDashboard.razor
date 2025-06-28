@@ -1,0 +1,230 @@
+@page "/dashboard"
+@using FintechDashboard.Web.Models
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-0">📈 Stock Dashboard</h1>
+                    <p class="text-muted mb-0">Real-time market data and stock tracking</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" @onclick="RefreshData">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <button class="btn btn-primary" @onclick="AddStock">
+                        <i class="bi bi-plus"></i> Add Stock
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Market Summary</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-primary bg-opacity-10 rounded p-2">
+                                        <i class="bi bi-graph-up text-primary"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Total Stocks</h6>
+                                    <p class="text-muted mb-0">@(Stocks?.Count ?? 0) tracked</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-success bg-opacity-10 rounded p-2">
+                                        <i class="bi bi-arrow-up text-success"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Gainers</h6>
+                                    <p class="text-muted mb-0">@(Stocks?.Count(s => s.IsPositiveChange) ?? 0) stocks</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-danger bg-opacity-10 rounded p-2">
+                                        <i class="bi bi-arrow-down text-danger"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Losers</h6>
+                                    <p class="text-muted mb-0">@(Stocks?.Count(s => s.IsNegativeChange) ?? 0) stocks</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-info bg-opacity-10 rounded p-2">
+                                        <i class="bi bi-clock text-info"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Last Updated</h6>
+                                    <p class="text-muted mb-0">@LastUpdated.ToString("HH:mm:ss")</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Cards -->
+    <div class="row">
+        @if (IsLoading)
+        {
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading stock data...</p>
+            </div>
+        }
+        else if (Stocks != null && Stocks.Any())
+        {
+            @foreach (var stock in Stocks)
+            {
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 stock-card @stock.ChangeBgColor">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title mb-1">@stock.Symbol</h5>
+                                    <p class="text-muted small mb-0">@stock.LatestTradingDay</p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge @(stock.IsPositiveChange ? "bg-success" : stock.IsNegativeChange ? "bg-danger" : "bg-secondary")">
+                                        @stock.ChangeIcon
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h3 class="mb-1">$@stock.Price.ToString("F2")</h3>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="@stock.ChangeColor fw-bold">
+                                        @(stock.Change > 0 ? "+" : "")@stock.Change?.ToString("F2")
+                                    </span>
+                                    <span class="@stock.ChangeColor small">
+                                        (@stock.ChangePercent)
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Open</small>
+                                    <span class="fw-bold">$@stock.Open?.ToString("F2")</span>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">High</small>
+                                    <span class="fw-bold text-success">$@stock.High?.ToString("F2")</span>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Low</small>
+                                    <span class="fw-bold text-danger">$@stock.Low?.ToString("F2")</span>
+                                </div>
+                            </div>
+
+                            @if (stock.Volume.HasValue)
+                            {
+                                <div class="mt-3 pt-3 border-top">
+                                    <small class="text-muted">Volume: @stock.Volume.Value.ToString("N0")</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="col-12">
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    @ErrorMessage
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="col-12 text-center">
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    No stock data available. Click "Refresh" to load data.
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Add Stock Modal -->
+    @if (ShowAddStockModal)
+    {
+        <div class="modal fade show" style="display: block;" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Stock to Watchlist</h5>
+                        <button type="button" class="btn-close" @onclick="CloseAddStockModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="newSymbol" class="form-label">Stock Symbol</label>
+                            <input type="text" class="form-control" id="newSymbol" @bind="NewStockSymbol" 
+                                   placeholder="e.g., AAPL, MSFT, GOOGL" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseAddStockModal">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="ConfirmAddStock">Add Stock</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
+        </div>
+    }
+</div>
+
+<style>
+    .stock-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: 1px solid rgba(0,0,0,.125);
+    }
+    
+    .stock-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .bg-success-subtle {
+        background-color: rgba(25, 135, 84, 0.1) !important;
+    }
+    
+    .bg-danger-subtle {
+        background-color: rgba(220, 53, 69, 0.1) !important;
+    }
+    
+    .bg-secondary-subtle {
+        background-color: rgba(108, 117, 125, 0.1) !important;
+    }
+</style> 

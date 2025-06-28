@@ -9,6 +9,12 @@ namespace FintechDashboard.Api.Services
 
         public async Task<decimal?> GetStockPrice(string symbol)
         {
+            var stockData = await GetStockData(symbol);
+            return stockData?.Price;
+        }
+
+        public async Task<StockData?> GetStockData(string symbol)
+        {
             var url = $"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={ApiKey}";
             var response = await _httpClient.GetAsync(url);
 
@@ -23,27 +29,9 @@ namespace FintechDashboard.Api.Services
                 using var doc = JsonDocument.Parse(content);
                 var root = doc.RootElement;
 
-                // Alpha Vantage sometimes wraps keys with whitespace or casing issues
                 if (root.TryGetProperty("Global Quote", out var globalQuote))
                 {
-                    if (globalQuote.TryGetProperty("05. price", out var priceProperty))
-                    {
-                        var rawPrice = priceProperty.GetString();
-                        Console.WriteLine("Raw price value: " + rawPrice);
-
-                        if (decimal.TryParse(rawPrice, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var price))
-                        {
-                            return price;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Failed to parse price.");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Property '05. price' not found in 'Global Quote'.");
-                    }
+                    return ParseStockData(globalQuote);
                 }
                 else
                 {
@@ -57,5 +45,102 @@ namespace FintechDashboard.Api.Services
 
             return null;
         }
+
+        public async Task<List<StockData>> GetMultipleStocksData(List<string> symbols)
+        {
+            var tasks = symbols.Select(symbol => GetStockData(symbol));
+            var results = await Task.WhenAll(tasks);
+            return results.Where(x => x != null).ToList()!;
+        }
+
+        private StockData? ParseStockData(JsonElement globalQuote)
+        {
+            try
+            {
+                var symbol = GetStringProperty(globalQuote, "01. symbol");
+                var open = GetDecimalProperty(globalQuote, "02. open");
+                var high = GetDecimalProperty(globalQuote, "03. high");
+                var low = GetDecimalProperty(globalQuote, "04. low");
+                var price = GetDecimalProperty(globalQuote, "05. price");
+                var volume = GetLongProperty(globalQuote, "06. volume");
+                var latestTradingDay = GetStringProperty(globalQuote, "07. latest trading day");
+                var previousClose = GetDecimalProperty(globalQuote, "08. previous close");
+                var change = GetDecimalProperty(globalQuote, "09. change");
+                var changePercent = GetStringProperty(globalQuote, "10. change percent");
+
+                if (price.HasValue)
+                {
+                    return new StockData
+                    {
+                        Symbol = symbol,
+                        Open = open,
+                        High = high,
+                        Low = low,
+                        Price = price.Value,
+                        Volume = volume,
+                        LatestTradingDay = latestTradingDay,
+                        PreviousClose = previousClose,
+                        Change = change,
+                        ChangePercent = changePercent
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing stock data: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        private string GetStringProperty(JsonElement element, string propertyName)
+        {
+            return element.TryGetProperty(propertyName, out var prop) ? prop.GetString() ?? "" : "";
+        }
+
+        private decimal? GetDecimalProperty(JsonElement element, string propertyName)
+        {
+            if (element.TryGetProperty(propertyName, out var prop))
+            {
+                var value = prop.GetString();
+                if (decimal.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var result))
+                {
+                    return result;
+                }
+            }
+            return null;
+        }
+
+        private long? GetLongProperty(JsonElement element, string propertyName)
+        {
+            if (element.TryGetProperty(propertyName, out var prop))
+            {
+                var value = prop.GetString();
+                if (long.TryParse(value, out var result))
+                {
+                    return result;
+                }
+            }
+            return null;
+        }
+    }
+
+    public class StockData
+    {
+        public string Symbol { get; set; } = "";
+        public decimal? Open { get; set; }
+        public decimal? High { get; set; }
+        public decimal? Low { get; set; }
+        public decimal Price { get; set; }
+        public long? Volume { get; set; }
+        public string LatestTradingDay { get; set; } = "";
+        public decimal? PreviousClose { get; set; }
+        public decimal? Change { get; set; }
+        public string ChangePercent { get; set; } = "";
+
+        public bool IsPositiveChange => Change > 0;
+        public bool IsNegativeChange => Change < 0;
+        public string ChangeColor => IsPositiveChange ? "text-success" : IsNegativeChange ? "text-danger" : "text-muted";
+        public string ChangeIcon => IsPositiveChange ? "↗" : IsNegativeChange ? "↘" : "→";
     }
 }

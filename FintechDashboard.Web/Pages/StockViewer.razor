@@ -1,21 +1,39 @@
 ﻿@page "/stocks"
-@page "/"
+@using FintechDashboard.Web.Models
 
-<h3>📈 Stock Price Viewer</h3>
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">🔍 Stock Price Lookup</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="symbolInput" class="form-label">Stock Symbol</label>
+                        <input id="symbolInput" class="form-control" @bind="Symbol" placeholder="Enter stock symbol (e.g., AAPL)" />
+                    </div>
 
-<div class="form-group">
-    <input class="form-control" @bind="Symbol" placeholder="Enter stock symbol (e.g., AAPL)" />
-</div>
+                    <button class="btn btn-primary mt-3" @onclick="GetPriceAsync">
+                        <i class="bi bi-search"></i> Get Price
+                    </button>
 
-<button class="btn btn-primary mt-2" @onclick="GetPriceAsync">Get Price</button>
-
-@if (!string.IsNullOrWhiteSpace(ErrorMessage))
-{
-    <div class="alert alert-danger mt-3">@ErrorMessage</div>
-}
-else if (Price.HasValue)
-{
-    <div class="alert alert-success mt-3">
-        The price of <strong>@Symbol.ToUpper()</strong> is <strong>@Price.Value.ToString("C")</strong>
+                    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            @ErrorMessage
+                        </div>
+                    }
+                    else if (Price.HasValue)
+                    {
+                        <div class="alert alert-success mt-3">
+                            <h5 class="alert-heading">Stock Information</h5>
+                            <p class="mb-1">The price of <strong>@Symbol.ToUpper()</strong> is <strong>@Price.Value.ToString("C")</strong></p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
-}
+</div>
