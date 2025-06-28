@@ -1,38 +1,66 @@
-﻿using System.Net.Http.Json;
+﻿using Microsoft.AspNetCore.Components;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace FintechDashboard.Web.Pages
 {
-    public partial class StockViewer
+    public partial class StockViewer : ComponentBase
     {
-    private string Symbol = "AAPL";
-        private decimal? Price = null;
-        private bool Loading = false;
-        private bool HasError = false;
+        [Inject] private HttpClient Http { get; set; } = default!;
 
-        private async Task FetchPrice()
+        protected string Symbol { get; set; } = "AAPL";
+        protected decimal? Price { get; set; }
+        protected string? ErrorMessage { get; set; }
+
+        protected async Task GetPriceAsync()
         {
-            Loading = true;
-            HasError = false;
+            ErrorMessage = null;
             Price = null;
+
+            if (string.IsNullOrWhiteSpace(Symbol))
+            {
+                ErrorMessage = "Please enter a valid stock symbol.";
+                return;
+            }
 
             try
             {
-                var result = await Http.GetFromJsonAsync<StockResult>($"https://localhost:7283/api/stock/{Symbol}");
-                Price = result?.Price;
+                var response = await Http.GetAsync($"api/stock/{Symbol}");
+                var content = await response.Content.ReadAsStringAsync();
+
+                // Quick debug log
+                Console.WriteLine($"[DEBUG] Response content: {content}");
+
+                if (!response.IsSuccessStatusCode || content.StartsWith("<"))
+                {
+                    ErrorMessage = "Error from server or unexpected content format.";
+                    return;
+                }
+
+                var result = JsonSerializer.Deserialize<StockPriceResult>(content, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (result?.Price > 0)
+                {
+                    Price = result.Price;
+                }
+                else
+                {
+                    ErrorMessage = "Stock price not found. Please check the symbol.";
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                HasError = true;
-            }
-            finally
-            {
-                Loading = false;
+                ErrorMessage = $"Error: {ex.Message}";
             }
         }
 
-        public class StockResult
+        public class StockPriceResult
         {
-            public string? Symbol { get; set; }
+            public string Symbol { get; set; } = string.Empty;
             public decimal Price { get; set; }
         }
     }

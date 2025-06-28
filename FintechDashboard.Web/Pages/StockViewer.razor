@@ -1,22 +1,21 @@
-﻿@page "/stock"
-@inject HttpClient Http
+﻿@page "/stocks"
+@page "/"
 
-<h3>Stock Viewer</h3>
+<h3>📈 Stock Price Viewer</h3>
 
-<input @bind="Symbol" placeholder="Enter stock symbol..." />
-<button @onclick="FetchPrice">Get Price</button>
+<div class="form-group">
+    <input class="form-control" @bind="Symbol" placeholder="Enter stock symbol (e.g., AAPL)" />
+</div>
 
-@if (Loading)
+<button class="btn btn-primary mt-2" @onclick="GetPriceAsync">Get Price</button>
+
+@if (!string.IsNullOrWhiteSpace(ErrorMessage))
 {
-    <p>Loading...</p>
+    <div class="alert alert-danger mt-3">@ErrorMessage</div>
 }
 else if (Price.HasValue)
 {
-    <p><strong>@Symbol</strong> current price: <span style="color:green">@Price $</span></p>
+    <div class="alert alert-success mt-3">
+        The price of <strong>@Symbol.ToUpper()</strong> is <strong>@Price.Value.ToString("C")</strong>
+    </div>
 }
-else if (HasError)
-{
-    <p style="color:red">Stock not found or error retrieving price.</p>
-}
-
-
