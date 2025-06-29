@@ -1,23 +1,92 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">📈 Fintech Dashboard</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
+﻿<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="brand">
+            <div class="brand-icon">📈</div>
+            <div class="brand-text">
+                <h3>Fintech</h3>
+                <span>Dashboard</span>
+            </div>
+        </div>
+        <button class="sidebar-toggle" @onclick="ToggleNavMenu" title="Toggle Navigation">
+            <i class="bi bi-list"></i>
         </button>
     </div>
-</div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="dashboard">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </NavLink>
+    <div class="sidebar-content @NavMenuCssClass" @onclick="ToggleNavMenu">
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h6 class="nav-section-title">Main</h6>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="dashboard">
+                        <div class="nav-icon">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <span class="nav-text">Dashboard</span>
+                        <div class="nav-indicator"></div>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="stocks">
+                        <div class="nav-icon">
+                            <i class="bi bi-search"></i>
+                        </div>
+                        <span class="nav-text">Stock Lookup</span>
+                        <div class="nav-indicator"></div>
+                    </NavLink>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <h6 class="nav-section-title">Quick Actions</h6>
+                <div class="nav-item">
+                    <a class="nav-link" href="dashboard" onclick="document.querySelector('.btn-primary').click(); return false;">
+                        <div class="nav-icon">
+                            <i class="bi bi-plus-circle"></i>
+                        </div>
+                        <span class="nav-text">Add Stock</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="dashboard" onclick="document.querySelector('.btn-outline-primary').click(); return false;">
+                        <div class="nav-icon">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </div>
+                        <span class="nav-text">Refresh Data</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <h6 class="nav-section-title">Market Info</h6>
+                <div class="nav-item">
+                    <a class="nav-link" href="#">
+                        <div class="nav-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <span class="nav-text">Market Trends</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="#">
+                        <div class="nav-icon">
+                            <i class="bi bi-newspaper"></i>
+                        </div>
+                        <span class="nav-text">News</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="bi bi-person-circle"></i>
+            </div>
+            <div class="user-details">
+                <span class="user-name">Trader</span>
+                <span class="user-status">Online</span>
+            </div>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="stocks">
-                <i class="bi bi-search"></i> Stock Lookup
-            </NavLink>
-        </div>
-    </nav>
+    </div>
 </div>
