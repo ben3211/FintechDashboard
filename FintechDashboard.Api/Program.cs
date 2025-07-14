@@ -14,6 +14,8 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddHttpClient<StockService>();
+builder.Services.AddHttpClient<NewsService>();
+builder.Services.AddHttpClient<OpenAiService>();
 
 
 var app = builder.Build();
