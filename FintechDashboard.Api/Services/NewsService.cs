@@ -5,10 +5,11 @@ namespace FintechDashboard.Api.Services
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
 
-        public NewsService(HttpClient httpClient, IConfiguration configuration)
+        public NewsService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _apiKey = configuration["NewsApi:ApiKey"];
+            _apiKey = Environment.GetEnvironmentVariable("NEWSAPI_API_KEY")
+                ?? throw new InvalidOperationException("NEWSAPI_API_KEY environment variable is not set.");
         }
 
         public async Task<List<string>> GetRecentNewsAsync(string asset)

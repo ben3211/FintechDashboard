@@ -6,7 +6,14 @@ namespace FintechDashboard.Api.Services
     public class StockService(HttpClient httpClient)
     {
         private readonly HttpClient _httpClient = httpClient;
-        private const string ApiKey = "QGYE23X07FA1PHRC";
+        private readonly string _apiKey;
+
+        public StockService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+            _apiKey = Environment.GetEnvironmentVariable("ALPHAVANTAGE_API_KEY")
+                ?? throw new InvalidOperationException("ALPHAVANTAGE_API_KEY environment variable is not set.");
+        }
 
         public async Task<decimal?> GetStockPrice(string symbol)
         {
@@ -16,7 +23,7 @@ namespace FintechDashboard.Api.Services
 
         public async Task<StockData?> GetStockData(string symbol)
         {
-            var url = $"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={ApiKey}";
+            var url = $"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={_apiKey}";
             var response = await _httpClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)

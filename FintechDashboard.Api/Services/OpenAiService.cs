@@ -9,10 +9,11 @@ namespace FintechDashboard.Api.Services
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
 
-        public OpenAiService(HttpClient httpClient, IConfiguration configuration)
+        public OpenAiService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _apiKey = configuration["OpenAi:ApiKey"];
+            _apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+                ?? throw new InvalidOperationException("OPENAI_API_KEY environment variable is not set.");
         }
 
         public async Task<string> SummarizeNewsAsync(List<string> newsList)
