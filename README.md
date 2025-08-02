@@ -1,4 +1,5 @@
 # FintechDashboard
+<img width="1907" height="917" alt="FinTech_Dashboard_GitHub" src="https://github.com/user-attachments/assets/de4176b1-0832-47b2-8b8b-f7f72b3d202c" />
 
 ## API Key Setup (Environment Variables)
 
